@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AskUAUT Chatbot</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+    }
+
+    #chatbox {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 360px;
+      height: 520px;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 2px solid #00274D;
+      z-index: 9999;
+    }
+
+    #chat-header {
+      background-color: #00274D;
+      color: white;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+    }
+
+    #chat-header h4 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 14px;
+      background-color: #f9f9f9;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      max-width: 85%;
+      line-height: 1.6;
+      padding: 10px 14px;
+      border-radius: 12px;
+      word-break: break-word;
+    }
+
+    .user {
+      background-color: #E9F5FF;
+      align-self: flex-end;
+      border: 1px solid #b6d9f7;
+    }
+
+    .bot {
+      background-color: #FFF7E5;
+      border: 1px solid #FFD166;
+      align-self: flex-start;
+    }
+
+    #inputBox {
+      display: flex;
+      border-top: 1px solid #eee;
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .bot a {
+      color: #1a0dab;
+      text-decoration: underline;
+    }
+
+    .bot strong {
+      color: #00274D;
+    }
+
+    .bot em {
+      color: #444;
+    }
+
+    .bot ul,
+    .bot ol {
+      margin: 8px 0;
+      padding-left: 20px;
+    }
+
+    .bot li {
+      margin-bottom: 6px;
+    }
+
+    .bot br {
+      display: block;
+      content: "";
+      margin: 6px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div id="chatbox">
+  <div id="chat-header">
+    <h4>AskUAUT Chatbot</h4>
+  </div>
+  <div id="messages">
+    <div class="message bot"><strong>AskUAUT:</strong><br>Hello! How can I help you with your UAUT application today?</div>
+  </div>
+  <div id="inputBox">
+    <input type="text" id="chat-input" placeholder="Type your question..." />
+  </div>
+</div>
+
+<script>
+  const input = document.getElementById('chat-input');
+  const messages = document.getElementById('messages');
+
+  const messagesHistory = [
+    {
+      role: 'system',
+      content: "You are AskUAUT, the official AI assistant for the United African University of Tanzania (UAUT)."
+    },
+    {
+      role: 'assistant',
+      content: "Hello! How can I help you with your UAUT application today?"
+    }
+  ];
+
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter' && input.value.trim()) {
+      const userMsg = input.value.trim();
+      appendMessage('You', userMsg, 'user');
+      input.value = '';
+
+      messagesHistory.push({ role: 'user', content: userMsg });
+
+      try {
+        const res = await fetch('http://localhost:3000/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: messagesHistory })
+        });
+
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response.";
+        appendMessage('AskUAUT', reply, 'bot', true);
+        messagesHistory.push({ role: 'assistant', content: reply });
+      } catch (error) {
+        appendMessage('AskUAUT', "Oops! Something went wrong.", 'bot');
+      }
+
+      messages.scrollTop = messages.scrollHeight;
+    }
+  });
+
+  function appendMessage(sender, text, type, isHTML = false) {
+    const msg = document.createElement('div');
+    msg.className = `message ${type}`;
+    msg.innerHTML = `<strong>${sender}:</strong><br>` + (isHTML ? text : escapeHTML(text));
+    messages.appendChild(msg);
+  }
+
+  function escapeHTML(str) {
+    return str.replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+  }
+</script>
+
+</body>
+</html>
