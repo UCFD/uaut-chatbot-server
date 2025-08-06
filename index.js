@@ -97,14 +97,14 @@ If the user asks about other programs (e.g., LLB, MBA, LLM, Computer Science), r
 `
 };
 
-// Handle chat route
+// Chat route
 app.post('/chat', async (req, res) => {
   const { messages } = req.body;
   const chatMessages = [askUAUTSystemPrompt, ...messages];
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o', // ✅ Using GPT-4o
       messages: chatMessages,
     });
 
